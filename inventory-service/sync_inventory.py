@@ -5,9 +5,8 @@ Usage:
   source venv/bin/activate && python sync_inventory.py
 """
 
-import json
+import httpx
 from urllib.parse import urlencode
-from urllib.request import urlopen
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.session import SessionLocal, engine, Base
@@ -21,8 +20,12 @@ Base.metadata.create_all(bind=engine)
 
 def fetch_seeded_products() -> list:
     query = urlencode({"size": 500, "_source": "id,stock,availability_status"})
-    with urlopen(f"{settings.ELASTICSEARCH_URL}/{INDEX_NAME}/_search?{query}", timeout=30) as response:
-        payload = json.loads(response.read().decode("utf-8"))
+    with httpx.Client(timeout=30.0) as client:
+        response = client.get(
+            f"{settings.ELASTICSEARCH_URL}/{INDEX_NAME}/_search?{query}"
+        )
+        response.raise_for_status()
+        payload = response.json()
     hits = payload.get("hits", {}).get("hits", [])
     return [hit.get("_source", {}) for hit in hits]
 
