@@ -104,7 +104,7 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: 48, textAlign: 'center' }}>
+      <div className="container page-state">
         Loading checkout...
       </div>
     );
@@ -112,15 +112,15 @@ export default function CheckoutPage() {
 
   if (!cart) {
     return (
-      <div className="container" style={{ padding: 48, textAlign: 'center' }}>
+      <div className="container page-state">
         {error || 'Checkout is unavailable right now.'}
       </div>
     );
   }
 
   return (
-    <div className="container" style={{ display: 'flex', gap: 16, paddingTop: 16, alignItems: 'flex-start' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="container checkout-layout">
+      <div className="checkout-main">
         <section className="checkout-card">
           <div className={`checkout-step ${activeStep === 1 ? 'checkout-step--active' : ''}`}>
             <span className="checkout-step__index">1</span>
@@ -144,7 +144,7 @@ export default function CheckoutPage() {
                 <input value={address.state} onChange={(e) => updateAddress('state', e.target.value)} placeholder="State" />
                 <input className="checkout-address__wide" value={address.landmark || ''} onChange={(e) => updateAddress('landmark', e.target.value)} placeholder="Landmark" />
               </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+              <div className="checkout-chip-row">
                 <button
                   className={`checkout-chip ${address.address_type === 'HOME' ? 'checkout-chip--active' : ''}`}
                   onClick={() => updateAddress('address_type', 'HOME')}
@@ -159,8 +159,7 @@ export default function CheckoutPage() {
                 </button>
               </div>
               <button
-                className="btn btn--buy"
-                style={{ marginTop: 20, width: 'auto', padding: '14px 32px' }}
+                className="btn btn--buy checkout-step-button checkout-step-button--address"
                 onClick={() => setActiveStep(2)}
               >
                 DELIVER HERE
@@ -184,7 +183,7 @@ export default function CheckoutPage() {
               {cart.items.map((item) => (
                 <article key={item.product_id} className="checkout-item">
                   <img src={item.thumbnail} alt={item.title} className="checkout-item__image" />
-                  <div style={{ flex: 1 }}>
+                  <div className="checkout-item__content">
                     <div className="checkout-item__title">{item.title}</div>
                     <div className="checkout-item__seller">Seller: RetailNet</div>
                     <div className="checkout-item__price">
@@ -200,10 +199,9 @@ export default function CheckoutPage() {
                   </div>
                 </article>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div className="checkout-step-actions checkout-step-actions--summary">
                 <button
-                  className="btn btn--buy"
-                  style={{ width: 'auto', padding: '16px 40px' }}
+                  className="btn btn--buy checkout-step-button"
                   onClick={() => setActiveStep(3)}
                 >
                   CONTINUE
@@ -248,14 +246,13 @@ export default function CheckoutPage() {
                 </div>
               )}
               {error && (
-                <div style={{ color: '#d32f2f', marginTop: 16, fontSize: 14 }}>
+                <div className="checkout-error">
                   {error}
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+              <div className="checkout-step-actions">
                 <button
-                  className="btn btn--buy"
-                  style={{ width: 'auto', padding: '16px 40px' }}
+                  className="btn btn--buy checkout-step-button"
                   onClick={handlePlaceOrder}
                   disabled={isProcessing}
                 >
@@ -275,7 +272,7 @@ export default function CheckoutPage() {
         </div>
         <div className="checkout-sidebar__row">
           <span>Discount</span>
-          <span style={{ color: '#388e3c' }}>-₹{estimatedSavings.toFixed(0)}</span>
+          <span className="checkout-positive">-₹{estimatedSavings.toFixed(0)}</span>
         </div>
         <div className="checkout-sidebar__row">
           <span>Platform Fee</span>
@@ -283,7 +280,7 @@ export default function CheckoutPage() {
         </div>
         <div className="checkout-sidebar__row">
           <span>Delivery Charges</span>
-          <span style={{ color: '#388e3c' }}>FREE</span>
+          <span className="checkout-positive">FREE</span>
         </div>
         <div className="checkout-sidebar__total">
           <span>Total Amount</span>

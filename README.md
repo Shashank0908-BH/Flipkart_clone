@@ -2,13 +2,43 @@
 
 Flipkart-style ecommerce clone built with a Next.js storefront and FastAPI microservices for catalog, inventory, cart, auth, and orders.
 
-## What is implemented
+## Assignment Coverage
+
+### Core features
+
+- Product listing page with Flipkart-style product cards, search, category filtering, price filtering, and rating filtering
+- Product detail page with multi-image gallery, merchandising offers, description/specifications, stock status, Add to Cart, and Buy Now
+- Shopping cart with quantity updates, remove item, subtotal, discount view, and checkout entry
+- Checkout flow with delivery address form, order summary review, payment option selection, order placement, and order confirmation page
+- Public deployment suitable for evaluator testing
+
+### Bonus features
+
+- Responsive UI for desktop, tablet, and mobile layouts
+- OTP-based login/signup flow on top of the default guest session
+- Order history page
+- Wishlist page backed by the auth service
+- Order confirmation email support when provider credentials are configured
+
+### Evaluator-friendly assumptions
+
+- A stable default shopper session is created automatically so the app works even if login is skipped
+- OTP is returned in the response for evaluator/demo convenience
+- Payments are mocked as successful so the focus stays on the commerce flow
+- The app is optimized for a one-day evaluation window using Vercel + Railway
+
+## Architecture And Data Design
+
+- `frontend` uses Next.js App Router and calls the backend services directly over HTTPS
+- `product-catalog` stores searchable product documents in Elasticsearch, including merchandising copy, pricing, category metadata, and multiple images
+- `inventory-service` stores stock state in PostgreSQL via the `inventory_items` table
+- `auth-service` stores `users`, `otps`, `wishlist_items`, and `addresses` in PostgreSQL
+- `order-service` stores `orders`, `order_items`, and `payments` in PostgreSQL
+- `cart-service` keeps carts in Redis hashes keyed by `cart:{user_id}` for fast session-style cart access
+
+## Highlights
 
 - Flipkart-style home page, product listing, PDP, cart, checkout, order history, and order confirmation
-- Default shopper session so the core flow works without manual login
-- OTP login as a bonus flow
-- Wishlist page backed by the auth service
-- Order confirmation email delivery when email provider env vars are configured
 - Elasticsearch-backed product catalog with rupee-normalized pricing
 - Multi-image carousel data for every product, including generated merchandising slides
 - Inventory validation during cart updates and checkout

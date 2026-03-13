@@ -41,7 +41,7 @@ export default function CartPage() {
   };
 
   if (loading) {
-    return <div className="container" style={{ padding: 48, textAlign: 'center', color: '#878787' }}>Loading cart...</div>;
+    return <div className="container page-state">Loading cart...</div>;
   }
 
   const items = cart?.items || [];
@@ -101,7 +101,7 @@ export default function CartPage() {
                   <div className="cart-item__status">
                     {item.quantity > 1 ? 'Ready to ship' : 'Fast delivery available'}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', marginTop: 12 }}>
+                  <div className="cart-item__actions">
                     <div className="cart-item__qty">
                       <button type="button" onClick={() => handleQtyChange(item.product_id, item.quantity - 1)}>−</button>
                       <span>{item.quantity}</span>

@@ -77,7 +77,7 @@ export default function WishlistPage() {
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: 48, textAlign: 'center', color: '#878787' }}>
+      <div className="container page-state">
         Loading wishlist...
       </div>
     );
@@ -85,7 +85,7 @@ export default function WishlistPage() {
 
   if (error) {
     return (
-      <div className="container" style={{ padding: 48, textAlign: 'center', color: '#d32f2f' }}>
+      <div className="container page-state page-state--error">
         {error}
       </div>
     );
@@ -93,24 +93,13 @@ export default function WishlistPage() {
 
   if (!products.length) {
     return (
-      <div className="container" style={{ maxWidth: 980, paddingTop: 24, paddingBottom: 48 }}>
-        <section style={{ background: '#fff', borderRadius: 4, padding: 48, textAlign: 'center' }}>
-          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 12 }}>Your wishlist is empty</h1>
-          <p style={{ color: '#878787', marginBottom: 24 }}>
+      <div className="container page-shell--narrow">
+        <section className="wishlist-page__empty">
+          <h1 className="wishlist-page__empty-title">Your wishlist is empty</h1>
+          <p className="wishlist-page__empty-copy">
             Save products you love and they will show up here for quick access.
           </p>
-          <Link
-            href="/products"
-            style={{
-              display: 'inline-block',
-              background: '#2874f0',
-              color: '#fff',
-              padding: '12px 28px',
-              borderRadius: 2,
-              fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
+          <Link href="/products" className="button-link button-link--primary">
             Browse products
           </Link>
         </section>
@@ -119,15 +108,15 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="container" style={{ paddingTop: 24, paddingBottom: 48 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 6 }}>My Wishlist</h1>
-          <div style={{ color: '#878787', fontSize: 14 }}>
+    <div className="container page-shell--narrow">
+      <div className="wishlist-page__header">
+        <div className="wishlist-page__meta">
+          <h1 className="wishlist-page__title">My Wishlist</h1>
+          <div className="wishlist-page__count">
             {wishlistItems.length} saved item{wishlistItems.length === 1 ? '' : 's'}
           </div>
         </div>
-        <Link href="/products" style={{ color: '#2874f0', fontWeight: 600, textDecoration: 'none' }}>
+        <Link href="/products" className="wishlist-page__link">
           Continue shopping
         </Link>
       </div>

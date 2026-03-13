@@ -92,9 +92,9 @@ function ProductListingInner() {
   }, [filters, q]);
 
   return (
-    <div className="container" style={{ paddingTop: 16 }}>
-      <div style={{ display: 'flex', gap: 16 }}>
-        <aside className="filters" style={{ width: 260, flexShrink: 0 }}>
+    <div className="container products-page">
+      <div className="products-page__layout">
+        <aside className="filters products-page__filters">
           <div className="filters__title">Filters</div>
 
           <div className="filter-group">
@@ -165,15 +165,15 @@ function ProductListingInner() {
           </div>
         </aside>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#878787' }}>
+        <div className="products-page__results">
+          <div className="products-page__summary">
             {q ? <>Showing results for &quot;{q}&quot; · </> : null}
             {products.length} products found
           </div>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 48, color: '#878787' }}>Loading products...</div>
+            <div className="page-state">Loading products...</div>
           ) : products.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 48, color: '#878787', fontSize: 18 }}>
+            <div className="page-state">
               No products found. Try adjusting your filters.
             </div>
           ) : (
@@ -191,7 +191,7 @@ function ProductListingInner() {
 
 export default function ProductListingPage() {
   return (
-    <Suspense fallback={<div style={{ textAlign: 'center', padding: 48 }}>Loading...</div>}>
+    <Suspense fallback={<div className="page-state">Loading...</div>}>
       <ProductListingInner />
     </Suspense>
   );

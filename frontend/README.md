@@ -2,6 +2,23 @@
 
 Next.js storefront for the Flipkart clone.
 
+## Implemented pages
+
+- `/` home page
+- `/products` product listing with search and filters
+- `/product/[id]` product detail page
+- `/cart` cart page
+- `/checkout` checkout flow
+- `/orders` order history
+- `/order-confirmation/[id]` order confirmation
+- `/wishlist` wishlist page
+
+## Responsive behavior
+
+- Desktop: two-column catalog, PDP, cart, and checkout layouts
+- Tablet: stacked shells with preserved navigation and product density
+- Mobile: single-column content flow, wrapping order headers, full-width checkout actions, and mobile-friendly wishlist/order screens
+
 ## Local env vars
 
 ```bash
