@@ -29,6 +29,8 @@ interface HeaderProps {
 }
 
 type MenuKey = 'account' | 'more' | null;
+const ACCOUNT_MENU_ID = 'header-account-menu';
+const MORE_MENU_ID = 'header-more-menu';
 
 export default function Header({
   cartCount = 0,
@@ -77,8 +79,18 @@ export default function Header({
       setOpenMenu(null);
     };
 
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenMenu(null);
+      }
+    };
+
     window.addEventListener('mousedown', handlePointerDown);
-    return () => window.removeEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
   }, []);
 
   const handleSearch = (event: React.FormEvent) => {
@@ -93,8 +105,6 @@ export default function Header({
     setOpenMenu((current) => (current === menu ? null : menu));
   };
 
-  const openAccountMenu = () => setOpenMenu('account');
-  const openMoreMenu = () => setOpenMenu('more');
   const closeMenus = () => setOpenMenu(null);
 
   const handleLoginAction = () => {
@@ -133,13 +143,14 @@ export default function Header({
           <div
             className="fk-header__menu-wrap"
             ref={accountRef}
-            onMouseEnter={openAccountMenu}
-            onMouseLeave={closeMenus}
           >
             <button
               type="button"
               className={`fk-header__action fk-header__action--active ${openMenu === 'account' ? 'fk-header__action--open' : ''}`}
               onClick={() => toggleMenu('account')}
+              aria-expanded={openMenu === 'account'}
+              aria-controls={ACCOUNT_MENU_ID}
+              aria-haspopup="menu"
             >
               <UserIcon className="fk-header__action-icon" size={19} />
               <span className="fk-header__action-label">{isLoggedIn ? userName || 'Account' : 'Login'}</span>
@@ -150,19 +161,24 @@ export default function Header({
             </button>
 
             {openMenu === 'account' ? (
-              <div className="fk-dropdown fk-dropdown--account">
+              <div
+                id={ACCOUNT_MENU_ID}
+                className="fk-dropdown fk-dropdown--account"
+                role="menu"
+                aria-label="Account menu"
+              >
                 <div className="fk-dropdown__top">
                   {isLoggedIn ? (
                     <>
                       <span className="fk-dropdown__eyebrow">Hello, {userName || 'Shopper'}</span>
-                      <Link href="/orders" className="fk-dropdown__top-link" onClick={closeMenus}>
+                      <Link href="/orders" className="fk-dropdown__top-link" onClick={closeMenus} role="menuitem">
                         My Profile
                       </Link>
                     </>
                   ) : (
                     <>
                       <span className="fk-dropdown__eyebrow">New customer?</span>
-                      <button type="button" className="fk-dropdown__top-link" onClick={handleLoginAction}>
+                      <button type="button" className="fk-dropdown__top-link" onClick={handleLoginAction} role="menuitem">
                         Sign Up
                       </button>
                     </>
@@ -170,14 +186,14 @@ export default function Header({
                 </div>
 
                 {!isLoggedIn ? (
-                  <button type="button" className="fk-dropdown__primary" onClick={handleLoginAction}>
+                  <button type="button" className="fk-dropdown__primary" onClick={handleLoginAction} role="menuitem">
                     Login / Sign Up
                   </button>
                 ) : null}
 
                 <div className="fk-dropdown__list">
                   {accountItems.map(({ label, href, Icon }) => (
-                    <Link key={label} href={href} className="fk-dropdown__item" onClick={closeMenus}>
+                    <Link key={label} href={href} className="fk-dropdown__item" onClick={closeMenus} role="menuitem">
                       <Icon className="fk-dropdown__icon" size={17} />
                       <span>{label}</span>
                     </Link>
@@ -187,7 +203,7 @@ export default function Header({
                 {isLoggedIn ? (
                   <>
                     <div className="fk-dropdown__divider" />
-                    <button type="button" className="fk-dropdown__item" onClick={handleLogoutAction}>
+                    <button type="button" className="fk-dropdown__item" onClick={handleLogoutAction} role="menuitem">
                       <LogoutIcon className="fk-dropdown__icon" size={17} />
                       <span>Logout</span>
                     </button>
@@ -200,13 +216,14 @@ export default function Header({
           <div
             className="fk-header__menu-wrap"
             ref={moreRef}
-            onMouseEnter={openMoreMenu}
-            onMouseLeave={closeMenus}
           >
             <button
               type="button"
               className={`fk-header__action fk-header__action--plain ${openMenu === 'more' ? 'fk-header__action--open' : ''}`}
               onClick={() => toggleMenu('more')}
+              aria-expanded={openMenu === 'more'}
+              aria-controls={MORE_MENU_ID}
+              aria-haspopup="menu"
             >
               <span className="fk-header__action-label">More</span>
               <ChevronDownIcon
@@ -216,10 +233,15 @@ export default function Header({
             </button>
 
             {openMenu === 'more' ? (
-              <div className="fk-dropdown fk-dropdown--more">
+              <div
+                id={MORE_MENU_ID}
+                className="fk-dropdown fk-dropdown--more"
+                role="menu"
+                aria-label="More menu"
+              >
                 <div className="fk-dropdown__list">
                   {moreItems.map(({ label, href, Icon }) => (
-                    <Link key={label} href={href} className="fk-dropdown__item" onClick={closeMenus}>
+                    <Link key={label} href={href} className="fk-dropdown__item" onClick={closeMenus} role="menuitem">
                       <Icon className="fk-dropdown__icon" size={17} />
                       <span>{label}</span>
                     </Link>
