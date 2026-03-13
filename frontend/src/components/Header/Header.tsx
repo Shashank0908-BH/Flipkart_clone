@@ -46,15 +46,22 @@ export default function Header({
   const moreRef = useRef<HTMLDivElement>(null);
 
   const accountItems = useMemo(
-    () => [
-      { label: 'My Profile', href: '/orders', Icon: UserIcon },
-      { label: 'Flipkart Plus Zone', href: '/products?category=smartphones', Icon: BoltIcon },
-      { label: 'Orders', href: '/orders', Icon: BagIcon },
-      { label: 'Wishlist', href: '/wishlist', Icon: HeartIcon },
-      { label: 'Rewards', href: '/products?category=beauty', Icon: GiftIcon },
-      { label: 'Gift Cards', href: '/products?category=groceries', Icon: GiftIcon },
-    ],
-    [],
+    () =>
+      isLoggedIn
+        ? [
+            { label: 'My Profile', href: '/orders', Icon: UserIcon },
+            { label: 'Flipkart Plus Zone', href: '/products?category=smartphones', Icon: BoltIcon },
+            { label: 'Orders', href: '/orders', Icon: BagIcon },
+            { label: 'Wishlist', href: '/wishlist', Icon: HeartIcon },
+            { label: 'Rewards', href: '/products?category=beauty', Icon: GiftIcon },
+            { label: 'Gift Cards', href: '/products?category=groceries', Icon: GiftIcon },
+          ]
+        : [
+            { label: 'Flipkart Plus Zone', href: '/products?category=smartphones', Icon: BoltIcon },
+            { label: 'Rewards', href: '/products?category=beauty', Icon: GiftIcon },
+            { label: 'Gift Cards', href: '/products?category=groceries', Icon: GiftIcon },
+          ],
+    [isLoggedIn],
   );
 
   const moreItems = useMemo(

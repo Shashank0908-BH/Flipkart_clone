@@ -3,20 +3,33 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getOrders } from '@/lib/api';
+import { hasAuthenticatedSession } from '@/lib/session';
 import type { OrderSummary } from '@/lib/types';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [needsLogin, setNeedsLogin] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadOrders = async () => {
+      if (!hasAuthenticatedSession()) {
+        if (!cancelled) {
+          setNeedsLogin(true);
+          setOrders([]);
+          setError('');
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
         const data = await getOrders();
         if (!cancelled) {
+          setNeedsLogin(false);
           setOrders(data);
         }
       } catch (err) {
@@ -42,6 +55,23 @@ export default function OrdersPage() {
 
   if (error) {
     return <div className="container page-state page-state--error">{error}</div>;
+  }
+
+  if (needsLogin) {
+    return (
+      <div className="container page-shell--narrow">
+        <div className="orders-page__empty">
+          <div className="orders-page__empty-icon">🔐</div>
+          <div className="orders-page__empty-title">Login to view your orders</div>
+          <div className="orders-page__empty-copy">
+            Your account order history is available only after you sign in.
+          </div>
+          <Link href="/products" className="button-link button-link--primary">
+            Continue Shopping
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
