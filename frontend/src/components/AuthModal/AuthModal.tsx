@@ -2,6 +2,10 @@
 import { useState } from 'react';
 import { sendOtp, verifyOtp } from '@/lib/api';
 import type { SessionUser } from '@/lib/types';
+import {
+  getPhoneOrEmailValidationError,
+  normalizePhoneOrEmailInput,
+} from '@/lib/validation';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -16,26 +20,46 @@ export default function AuthModal({ onClose, onLogin }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleIdentifierChange = (value: string) => {
+    setPhoneOrEmail(normalizePhoneOrEmailInput(value));
+    if (error) {
+      setError('');
+    }
+  };
+
   const handleSendOtp = async () => {
-    if (!phoneOrEmail.trim()) return;
+    const normalizedIdentifier = normalizePhoneOrEmailInput(phoneOrEmail);
+    const validationError = getPhoneOrEmailValidationError(normalizedIdentifier);
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
-      const res = await sendOtp(phoneOrEmail.trim());
+      setPhoneOrEmail(normalizedIdentifier);
+      const res = await sendOtp(normalizedIdentifier);
       setDevOtp(res.otp);
       setStep('otp');
-    } catch {
-      setError('Failed to send OTP. Try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send OTP. Try again.');
     }
     setLoading(false);
   };
 
   const handleVerifyOtp = async () => {
-    if (!otp.trim()) return;
+    const normalizedIdentifier = normalizePhoneOrEmailInput(phoneOrEmail);
+    if (!otp.trim()) {
+      setError('Enter the 6-digit OTP to continue.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
-      const res = await verifyOtp(phoneOrEmail.trim(), otp.trim());
+      const res = await verifyOtp(normalizedIdentifier, otp.trim());
       if (res.access_token) {
         onLogin(res.access_token, res.user);
         onClose();
@@ -72,16 +96,22 @@ export default function AuthModal({ onClose, onLogin }: AuthModalProps) {
           {step === 'phone' ? (
             <>
               <input
-                className="auth-modal__input"
+                className={`auth-modal__input ${error ? 'auth-modal__input--invalid' : ''}`}
                 placeholder="Enter Phone Number or Email"
                 value={phoneOrEmail}
-                onChange={(e) => setPhoneOrEmail(e.target.value)}
+                onChange={(e) => handleIdentifierChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
+                inputMode={phoneOrEmail.includes('@') ? 'email' : 'numeric'}
+                autoCapitalize="none"
+                autoCorrect="off"
               />
+              <p className="auth-modal__hint">
+                Use a 10-digit mobile number or a valid email address.
+              </p>
               <p className="auth-modal__hint">
                 By continuing, you agree to Flipkart&apos;s Terms of Use and Privacy Policy.
               </p>
-              {error && <p style={{ color: '#ff6161', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+              {error && <p className="auth-modal__error">{error}</p>}
               <button className="auth-modal__submit" onClick={handleSendOtp} disabled={loading}>
                 {loading ? 'Sending...' : 'Request OTP'}
               </button>
@@ -89,25 +119,35 @@ export default function AuthModal({ onClose, onLogin }: AuthModalProps) {
           ) : (
             <>
               <input
-                className="auth-modal__input"
+                className={`auth-modal__input ${error ? 'auth-modal__input--invalid' : ''}`}
                 placeholder="Enter OTP"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                onChange={(e) => {
+                  setOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
+                  if (error) {
+                    setError('');
+                  }
+                }}
                 onKeyDown={(e) => e.key === 'Enter' && handleVerifyOtp()}
                 maxLength={6}
+                inputMode="numeric"
               />
               {devOtp && (
                 <p className="auth-modal__hint" style={{ color: '#388e3c', fontWeight: 600 }}>
                   Dev Mode OTP: {devOtp}
                 </p>
               )}
-              {error && <p style={{ color: '#ff6161', fontSize: 13, marginBottom: 12 }}>{error}</p>}
+              {error && <p className="auth-modal__error">{error}</p>}
               <button className="auth-modal__submit" onClick={handleVerifyOtp} disabled={loading}>
                 {loading ? 'Verifying...' : 'Verify'}
               </button>
               <p
                 style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: '#2874f0', cursor: 'pointer' }}
-                onClick={() => { setStep('phone'); setOtp(''); setError(''); }}
+                onClick={() => {
+                  setStep('phone');
+                  setOtp('');
+                  setError('');
+                }}
               >
                 ← Change number
               </p>

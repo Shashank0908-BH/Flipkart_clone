@@ -229,6 +229,15 @@ input {
   overflow: hidden;
 }
 
+.fk-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+}
+
 .fk-dropdown--more {
   min-width: 240px;
 }
@@ -2174,10 +2183,21 @@ input {
   border-radius: 12px;
 }
 
+.auth-modal__input--invalid {
+  border-color: #ff6161;
+  box-shadow: 0 0 0 3px rgba(255, 97, 97, 0.12);
+}
+
 .auth-modal__hint {
   color: var(--fk-muted);
   font-size: 12px;
   line-height: 1.6;
+}
+
+.auth-modal__error {
+  margin: 12px 0 0;
+  color: #ff6161;
+  font-size: 13px;
 }
 
 .auth-modal__submit {

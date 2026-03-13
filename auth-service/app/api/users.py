@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User, WishlistItem, Address
 from app.core.security import decode_access_token
+from app.core.validation import validate_email_address, validate_phone_number
 
 router = APIRouter()
 
@@ -60,7 +61,7 @@ def update_profile(
     if name:
         user.name = name
     if email:
-        user.email = email
+        user.email = validate_email_address(email)
     db.commit()
     db.refresh(user)
     return {"message": "Profile updated", "name": user.name, "email": user.email}
@@ -154,7 +155,7 @@ def add_address(
     addr = Address(
         user_id=user.id,
         full_name=full_name,
-        phone=phone,
+        phone=validate_phone_number(phone, "phone number"),
         address_line_1=address_line_1,
         address_line_2=address_line_2,
         city=city,

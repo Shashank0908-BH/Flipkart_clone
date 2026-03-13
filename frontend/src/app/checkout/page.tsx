@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCart, placeOrder } from '@/lib/api';
 import type { CartResponse, CheckoutAddress } from '@/lib/types';
+import { getPhoneValidationError, normalizePhoneInput } from '@/lib/validation';
 
 const DEFAULT_ADDRESS: CheckoutAddress = {
   full_name: 'Shiv Singh Kanaujia',
@@ -63,6 +64,9 @@ export default function CheckoutPage() {
     key: K,
     value: CheckoutAddress[K],
   ) => {
+    if (error) {
+      setError('');
+    }
     setAddress((current) => ({ ...current, [key]: value }));
   };
 
@@ -74,6 +78,7 @@ export default function CheckoutPage() {
     address.address_line_1 &&
     address.city &&
     address.state;
+  const phoneValidationError = getPhoneValidationError(address.phone, 'mobile number');
 
   const totalAmount = (cart?.total || 0) + 7;
   const estimatedSavings =
@@ -83,8 +88,10 @@ export default function CheckoutPage() {
     }, 0) || 0;
 
   const handlePlaceOrder = async () => {
-    if (!addressReady) {
-      setError('Please complete the delivery address before placing the order.');
+    if (!addressReady || phoneValidationError) {
+      setError(
+        phoneValidationError || 'Please complete the delivery address before placing the order.',
+      );
       setActiveStep(1);
       return;
     }
@@ -100,6 +107,18 @@ export default function CheckoutPage() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleAddressContinue = () => {
+    if (!addressReady || phoneValidationError) {
+      setError(
+        phoneValidationError || 'Please complete the delivery address before placing the order.',
+      );
+      return;
+    }
+
+    setError('');
+    setActiveStep(2);
   };
 
   if (loading) {
@@ -135,7 +154,13 @@ export default function CheckoutPage() {
             <div className="checkout-card__body">
               <div className="checkout-address__grid">
                 <input value={address.full_name} onChange={(e) => updateAddress('full_name', e.target.value)} placeholder="Full name" />
-                <input value={address.phone} onChange={(e) => updateAddress('phone', e.target.value)} placeholder="Phone number" />
+                <input
+                  value={address.phone}
+                  onChange={(e) => updateAddress('phone', normalizePhoneInput(e.target.value))}
+                  placeholder="Phone number"
+                  inputMode="numeric"
+                  maxLength={10}
+                />
                 <input value={address.pincode} onChange={(e) => updateAddress('pincode', e.target.value)} placeholder="Pincode" />
                 <input value={address.locality} onChange={(e) => updateAddress('locality', e.target.value)} placeholder="Locality" />
                 <input className="checkout-address__wide" value={address.address_line_1} onChange={(e) => updateAddress('address_line_1', e.target.value)} placeholder="Address line 1" />
@@ -144,6 +169,11 @@ export default function CheckoutPage() {
                 <input value={address.state} onChange={(e) => updateAddress('state', e.target.value)} placeholder="State" />
                 <input className="checkout-address__wide" value={address.landmark || ''} onChange={(e) => updateAddress('landmark', e.target.value)} placeholder="Landmark" />
               </div>
+              {error && activeStep === 1 ? (
+                <div className="checkout-error">
+                  {error}
+                </div>
+              ) : null}
               <div className="checkout-chip-row">
                 <button
                   className={`checkout-chip ${address.address_type === 'HOME' ? 'checkout-chip--active' : ''}`}
@@ -160,7 +190,7 @@ export default function CheckoutPage() {
               </div>
               <button
                 className="btn btn--buy checkout-step-button checkout-step-button--address"
-                onClick={() => setActiveStep(2)}
+                onClick={handleAddressContinue}
               >
                 DELIVER HERE
               </button>
@@ -245,7 +275,7 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               )}
-              {error && (
+              {error && activeStep === 3 && (
                 <div className="checkout-error">
                   {error}
                 </div>

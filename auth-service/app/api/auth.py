@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User, OTP
 from app.core.security import create_access_token
+from app.core.validation import normalize_phone_or_email
 
 router = APIRouter()
 
@@ -51,17 +52,18 @@ def send_otp(phone_or_email: str, db: Session = Depends(get_db)):
     In production, this would integrate with an SMS/Email gateway.
     For this clone, we generate and store the OTP and return it in the response.
     """
+    normalized_phone_or_email = normalize_phone_or_email(phone_or_email)
     otp_code = str(random.randint(100000, 999999))
 
     otp_record = OTP(
-        phone_or_email=phone_or_email,
+        phone_or_email=normalized_phone_or_email,
         otp_code=otp_code,
     )
     db.add(otp_record)
     db.commit()
 
     return {
-        "message": f"OTP sent to {phone_or_email}",
+        "message": f"OTP sent to {normalized_phone_or_email}",
         "otp": otp_code,  # In production, NEVER return this. Using for dev/testing.
     }
 
@@ -72,10 +74,11 @@ def verify_otp(phone_or_email: str, otp_code: str, db: Session = Depends(get_db)
     Verify OTP and return a JWT token.
     Creates the user if they don't exist (auto-signup on first login like Flipkart).
     """
+    normalized_phone_or_email = normalize_phone_or_email(phone_or_email)
     otp_record = (
         db.query(OTP)
         .filter(
-            OTP.phone_or_email == phone_or_email,
+            OTP.phone_or_email == normalized_phone_or_email,
             OTP.otp_code == otp_code,
             OTP.is_used == False,
         )
@@ -91,18 +94,18 @@ def verify_otp(phone_or_email: str, otp_code: str, db: Session = Depends(get_db)
     db.commit()
 
     # Find or create user
-    is_email = "@" in phone_or_email
+    is_email = "@" in normalized_phone_or_email
     if is_email:
-        user = db.query(User).filter(User.email == phone_or_email).first()
+        user = db.query(User).filter(User.email == normalized_phone_or_email).first()
         if not user:
-            user = User(email=phone_or_email)
+            user = User(email=normalized_phone_or_email)
             db.add(user)
             db.commit()
             db.refresh(user)
     else:
-        user = db.query(User).filter(User.phone == phone_or_email).first()
+        user = db.query(User).filter(User.phone == normalized_phone_or_email).first()
         if not user:
-            user = User(phone=phone_or_email)
+            user = User(phone=normalized_phone_or_email)
             db.add(user)
             db.commit()
             db.refresh(user)
