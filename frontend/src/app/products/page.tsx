@@ -23,6 +23,20 @@ function ProductListingInner() {
   });
 
   useEffect(() => {
+    setFilters((current) => {
+      if (current.category === category && current.min_rating === minRating) {
+        return current;
+      }
+
+      return {
+        ...current,
+        category,
+        min_rating: minRating,
+      };
+    });
+  }, [category, minRating]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const loadCategories = async () => {

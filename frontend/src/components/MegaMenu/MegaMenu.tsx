@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   AppliancesIcon,
   AutoAccessoriesIcon,
@@ -39,15 +38,8 @@ const CATEGORIES = [
 
 export default function MegaMenu() {
   const pathname = usePathname();
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    setActiveCategory(new URLSearchParams(window.location.search).get('category'));
-  }, [pathname]);
+  const searchParams = useSearchParams();
+  const activeCategory = searchParams.get('category');
 
   return (
     <nav className="fk-catnav">

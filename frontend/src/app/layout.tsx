@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header/Header';
 import MegaMenu from '@/components/MegaMenu/MegaMenu';
@@ -135,7 +135,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
           onSearch={handleSearch}
         />
-        <MegaMenu />
+        <Suspense fallback={null}>
+          <MegaMenu />
+        </Suspense>
         <main style={{ minHeight: '60vh' }}>
           {sessionReady ? (
             children
