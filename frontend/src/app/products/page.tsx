@@ -1,0 +1,184 @@
+'use client';
+
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import ProductCard from '@/components/ProductCard/ProductCard';
+import { getCategories, searchProducts } from '@/lib/api';
+import type { Category, Product } from '@/lib/types';
+
+function ProductListingInner() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get('q') || '';
+  const category = searchParams.get('category') || '';
+  const minRating = searchParams.get('min_rating') || '';
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    category,
+    min_price: '',
+    max_price: '',
+    min_rating: minRating,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCategories = async () => {
+      try {
+        const data = await getCategories();
+        if (!cancelled) {
+          setCategories(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setCategories([]);
+        }
+      }
+    };
+
+    loadCategories().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProducts = async () => {
+      setLoading(true);
+      try {
+        const data = await searchProducts({
+          q: q || undefined,
+          category: filters.category || undefined,
+          min_price: filters.min_price ? Number(filters.min_price) : undefined,
+          max_price: filters.max_price ? Number(filters.max_price) : undefined,
+          min_rating: filters.min_rating ? Number(filters.min_rating) : undefined,
+        });
+        if (!cancelled) {
+          setProducts(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setProducts([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProducts().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [filters, q]);
+
+  return (
+    <div className="container" style={{ paddingTop: 16 }}>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <aside className="filters" style={{ width: 260, flexShrink: 0 }}>
+          <div className="filters__title">Filters</div>
+
+          <div className="filter-group">
+            <div className="filter-group__title">Category</div>
+            <label className="filter-group__option">
+              <input
+                type="radio"
+                name="category"
+                checked={filters.category === ''}
+                onChange={() => setFilters((current) => ({ ...current, category: '' }))}
+              />
+              All Categories
+            </label>
+            {categories.map((item) => (
+              <label key={item.slug} className="filter-group__option">
+                <input
+                  type="radio"
+                  name="category"
+                  checked={filters.category === item.slug}
+                  onChange={() => setFilters((current) => ({ ...current, category: item.slug }))}
+                />
+                {item.name}
+              </label>
+            ))}
+          </div>
+
+          <div className="filter-group">
+            <div className="filter-group__title">Price Range</div>
+            <div className="price-range">
+              <input
+                placeholder="Min"
+                type="number"
+                value={filters.min_price}
+                onChange={(event) => setFilters((current) => ({ ...current, min_price: event.target.value }))}
+              />
+              <span>-</span>
+              <input
+                placeholder="Max"
+                type="number"
+                value={filters.max_price}
+                onChange={(event) => setFilters((current) => ({ ...current, max_price: event.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <div className="filter-group__title">Customer Rating</div>
+            {[4, 3, 2].map((rating) => (
+              <label key={rating} className="filter-group__option">
+                <input
+                  type="radio"
+                  name="rating"
+                  checked={filters.min_rating === String(rating)}
+                  onChange={() => setFilters((current) => ({ ...current, min_rating: String(rating) }))}
+                />
+                {rating}★ & above
+              </label>
+            ))}
+            <label className="filter-group__option">
+              <input
+                type="radio"
+                name="rating"
+                checked={filters.min_rating === ''}
+                onChange={() => setFilters((current) => ({ ...current, min_rating: '' }))}
+              />
+              All Ratings
+            </label>
+          </div>
+        </aside>
+
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#878787' }}>
+            {q ? <>Showing results for &quot;{q}&quot; · </> : null}
+            {products.length} products found
+          </div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 48, color: '#878787' }}>Loading products...</div>
+          ) : products.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 48, color: '#878787', fontSize: 18 }}>
+              No products found. Try adjusting your filters.
+            </div>
+          ) : (
+            <div className="product-grid">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ProductListingPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: 'center', padding: 48 }}>Loading...</div>}>
+      <ProductListingInner />
+    </Suspense>
+  );
+}

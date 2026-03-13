@@ -1,32 +1,37 @@
-# Dependencies
-node_modules/
-
-# Next.js
-.next/
-out/
-
-# Environment files
-.env
-.env.local
-.env.*.local
-
-# OS files
+# OS and editor files
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
 .idea/
+.vscode/
 
 # Logs
 *.log
 npm-debug.log*
 
-# Python
+# Python cache and virtualenvs
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+*/venv/
+*/.venv/
 
-# Build
+# Environment files
+.env
+*/.env
+.env.local
+.env.*.local
+
+# Frontend dependencies and build output
+node_modules/
+.next/
+out/
 dist/
 build/
+
+# Local submission artifacts
+Screen Recording*.mov
+Scaler_SDE_Intern_Fullstack_Assignment_-_Flipkart_Clone.docx
