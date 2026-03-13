@@ -11,6 +11,16 @@ class Settings(BaseSettings):
     CART_SERVICE_URL: str = "http://127.0.0.1:8002"
     AUTH_SERVICE_URL: str = "http://127.0.0.1:8003"
     INVENTORY_SERVICE_URL: str = "http://127.0.0.1:8001"
+    EMAIL_PROVIDER: str = "auto"
+    ORDER_EMAIL_FROM: str | None = None
+    ORDER_EMAIL_REPLY_TO: str | None = None
+    ORDER_NOTIFICATION_TO_EMAIL: str | None = None
+    RESEND_API_KEY: str | None = None
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_USE_TLS: bool = True
 
     @property
     def DATABASE_URI(self) -> str:

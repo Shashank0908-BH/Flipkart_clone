@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.order import Order, OrderItem, Payment
 from app.core.config import settings
+from app.services.notifications import send_order_confirmation_email
 import httpx
 import uuid
 
@@ -172,6 +173,20 @@ async def process_checkout(
     db.commit()
     db.refresh(new_order)
     await clear_cart_after_checkout(cart_user_id)
+    try:
+        notification_result = await send_order_confirmation_email(
+            user=user,
+            order_id=new_order.id,
+            total_amount=new_order.total_amount,
+            payment_method=payment_method,
+            shipping_address=address_snapshot,
+            items=items,
+        )
+    except Exception as exc:
+        notification_result = {
+            "status": "failed",
+            "reason": str(exc),
+        }
 
     return {
         "message": "Order placed successfully",
@@ -179,6 +194,9 @@ async def process_checkout(
         "payment_status": payment.status,
         "total_amount": new_order.total_amount,
         "transaction_id": payment.transaction_id,
+        "notification_status": notification_result.get("status"),
+        "notification_recipient": notification_result.get("recipient"),
+        "notification_reason": notification_result.get("reason"),
     }
 
 

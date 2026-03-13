@@ -115,3 +115,9 @@ export interface Category {
   description: string;
   group: string;
 }
+
+export interface WishlistItem {
+  id: number;
+  product_id: string;
+  added_at: string;
+}

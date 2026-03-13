@@ -7,6 +7,8 @@ Flipkart-style ecommerce clone built with a Next.js storefront and FastAPI micro
 - Flipkart-style home page, product listing, PDP, cart, checkout, order history, and order confirmation
 - Default shopper session so the core flow works without manual login
 - OTP login as a bonus flow
+- Wishlist page backed by the auth service
+- Order confirmation email delivery when email provider env vars are configured
 - Elasticsearch-backed product catalog with rupee-normalized pricing
 - Multi-image carousel data for every product, including generated merchandising slides
 - Inventory validation during cart updates and checkout
@@ -195,6 +197,17 @@ The examples below assume your Railway service names match the repo folder names
 - `CART_SERVICE_URL=https://<cart-domain>`
 - `AUTH_SERVICE_URL=https://<auth-domain>`
 - `INVENTORY_SERVICE_URL=https://<inventory-domain>`
+- `ORDER_EMAIL_FROM=<verified sender address>`
+- `ORDER_NOTIFICATION_TO_EMAIL=<fallback inbox for default-session orders, optional>`
+- `EMAIL_PROVIDER=auto|resend|smtp`
+- `RESEND_API_KEY=<required when using Resend>`
+- `SMTP_HOST=<required when using SMTP>`
+- `SMTP_PORT=587`
+- `SMTP_USERNAME=<optional>`
+- `SMTP_PASSWORD=<optional>`
+- `SMTP_USE_TLS=true`
+
+If the shopper is using the default assignment session, order emails go to `ORDER_NOTIFICATION_TO_EMAIL` when it is configured. OTP-logged-in shoppers receive emails at their own email address.
 
 ### Deploy order
 

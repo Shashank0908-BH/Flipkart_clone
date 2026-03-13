@@ -12,6 +12,7 @@ import type {
   OrderSummary,
   Product,
   SessionUser,
+  WishlistItem,
 } from "@/lib/types";
 
 const API = {
@@ -254,9 +255,7 @@ export async function getWishlist(token?: string) {
     cache: "no-store",
   });
 
-  return parseJson<Array<{ id: number; product_id: string; added_at: string }>>(
-    response,
-  );
+  return parseJson<WishlistItem[]>(response);
 }
 
 export async function addToWishlist(productId: string, token?: string) {

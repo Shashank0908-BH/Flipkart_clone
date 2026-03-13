@@ -6,7 +6,7 @@ import Header from '@/components/Header/Header';
 import MegaMenu from '@/components/MegaMenu/MegaMenu';
 import Footer from '@/components/Footer/Footer';
 import AuthModal from '@/components/AuthModal/AuthModal';
-import { getCart, getDefaultSession } from '@/lib/api';
+import { getCart, getDefaultSession, getWishlist } from '@/lib/api';
 import {
   CART_UPDATED_EVENT,
   SESSION_UPDATED_EVENT,
@@ -17,6 +17,7 @@ import {
   storeSession,
 } from '@/lib/session';
 import type { SessionUser } from '@/lib/types';
+import { storeWishlistIds } from '@/lib/wishlist';
 import '@/styles/globals.css';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const refreshWishlistState = async () => {
+    try {
+      const items = await getWishlist();
+      storeWishlistIds(items.map((item) => item.product_id));
+    } catch {
+      // Leave the current cache in place if the sync fails temporarily.
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -57,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       } finally {
         if (!cancelled) {
           syncSessionState();
-          await refreshCartCount();
+          await Promise.all([refreshCartCount(), refreshWishlistState()]);
           setSessionReady(true);
         }
       }
@@ -66,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const handleSessionUpdate = () => {
       syncSessionState();
       refreshCartCount().catch(() => {});
+      refreshWishlistState().catch(() => {});
     };
 
     const handleCartUpdate = () => {

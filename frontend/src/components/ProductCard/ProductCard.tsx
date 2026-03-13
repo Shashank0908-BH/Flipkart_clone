@@ -4,8 +4,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { addToWishlist, removeFromWishlist } from '@/lib/api';
 import type { Product } from '@/lib/types';
-
-const WISHLIST_KEY = 'fk_wishlist_ids';
+import {
+  addStoredWishlistId,
+  getStoredWishlistSet,
+  isProductWishlisted,
+  removeStoredWishlistId,
+  WISHLIST_UPDATED_EVENT,
+} from '@/lib/wishlist';
 
 function getBadgeClass(badge: string) {
   const lower = badge.toLowerCase();
@@ -16,27 +21,6 @@ function getBadgeClass(badge: string) {
   return 'badge badge--assured';
 }
 
-function readWishlist() {
-  if (typeof window === 'undefined') {
-    return new Set<string>();
-  }
-
-  try {
-    const raw = window.localStorage.getItem(WISHLIST_KEY);
-    return new Set<string>(raw ? JSON.parse(raw) : []);
-  } catch {
-    return new Set<string>();
-  }
-}
-
-function writeWishlist(nextWishlist: Set<string>) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(Array.from(nextWishlist)));
-}
-
 export default function ProductCard({ product }: { product: Product }) {
   const images =
     product.images && product.images.length > 0
@@ -45,7 +29,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(() =>
-    readWishlist().has(product.id),
+    isProductWishlisted(product.id),
   );
 
   useEffect(() => {
@@ -60,32 +44,41 @@ export default function ProductCard({ product }: { product: Product }) {
     return () => window.clearInterval(interval);
   }, [images.length, isHovered]);
 
+  useEffect(() => {
+    const syncWishlistState = () => {
+      setIsWishlisted(isProductWishlisted(product.id));
+    };
+
+    syncWishlistState();
+    window.addEventListener(WISHLIST_UPDATED_EVENT, syncWishlistState);
+    return () => window.removeEventListener(WISHLIST_UPDATED_EVENT, syncWishlistState);
+  }, [product.id]);
+
   const handleWishlistToggle = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
 
-    const nextWishlist = readWishlist();
-    const shouldAdd = !nextWishlist.has(product.id);
+    const shouldAdd = !getStoredWishlistSet().has(product.id);
 
     if (shouldAdd) {
-      nextWishlist.add(product.id);
+      addStoredWishlistId(product.id);
       setIsWishlisted(true);
-      writeWishlist(nextWishlist);
       try {
         await addToWishlist(product.id);
       } catch {
-        // Local wishlist stays responsive even if the network is unavailable.
+        removeStoredWishlistId(product.id);
+        setIsWishlisted(false);
       }
       return;
     }
 
-    nextWishlist.delete(product.id);
+    removeStoredWishlistId(product.id);
     setIsWishlisted(false);
-    writeWishlist(nextWishlist);
     try {
       await removeFromWishlist(product.id);
     } catch {
-      // Best-effort sync.
+      addStoredWishlistId(product.id);
+      setIsWishlisted(true);
     }
   };
 

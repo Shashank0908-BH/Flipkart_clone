@@ -48,7 +48,7 @@ export default function Header({
       { label: 'My Profile', href: '/orders', Icon: UserIcon },
       { label: 'Flipkart Plus Zone', href: '/products?category=smartphones', Icon: BoltIcon },
       { label: 'Orders', href: '/orders', Icon: BagIcon },
-      { label: 'Wishlist', href: '/products', Icon: HeartIcon },
+      { label: 'Wishlist', href: '/wishlist', Icon: HeartIcon },
       { label: 'Rewards', href: '/products?category=beauty', Icon: GiftIcon },
       { label: 'Gift Cards', href: '/products?category=groceries', Icon: GiftIcon },
     ],
@@ -177,17 +177,10 @@ export default function Header({
 
                 <div className="fk-dropdown__list">
                   {accountItems.map(({ label, href, Icon }) => (
-                    isLoggedIn ? (
-                      <Link key={label} href={href} className="fk-dropdown__item" onClick={closeMenus}>
-                        <Icon className="fk-dropdown__icon" size={17} />
-                        <span>{label}</span>
-                      </Link>
-                    ) : (
-                      <button key={label} type="button" className="fk-dropdown__item" onClick={handleLoginAction}>
-                        <Icon className="fk-dropdown__icon" size={17} />
-                        <span>{label}</span>
-                      </button>
-                    )
+                    <Link key={label} href={href} className="fk-dropdown__item" onClick={closeMenus}>
+                      <Icon className="fk-dropdown__icon" size={17} />
+                      <span>{label}</span>
+                    </Link>
                   ))}
                 </div>
 
