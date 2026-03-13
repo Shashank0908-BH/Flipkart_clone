@@ -15,6 +15,17 @@ class ReserveInventoryItem(BaseModel):
 class ReserveInventoryBatch(BaseModel):
     items: list[ReserveInventoryItem]
 
+
+def _update_inventory_status(item: InventoryItem):
+    remaining_stock = item.stock_quantity - item.reserved_quantity
+    if remaining_stock <= 0:
+        item.status = "Out of Stock"
+    elif remaining_stock < 5:
+        item.status = "Grab or Gone"
+    else:
+        item.status = "In Stock"
+
+
 @router.get("/{item_id}")
 def get_inventory(item_id: str, db: Session = Depends(get_db)):
     item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
@@ -34,7 +45,12 @@ def get_inventory(item_id: str, db: Session = Depends(get_db)):
 
 @router.put("/{item_id}/reserve")
 def reserve_inventory(item_id: str, quantity: int = 1, db: Session = Depends(get_db)):
-    item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
+    item = (
+        db.query(InventoryItem)
+        .filter(InventoryItem.id == item_id)
+        .with_for_update()
+        .first()
+    )
     if not item:
         raise HTTPException(status_code=404, detail="Inventory item not found")
         
@@ -43,12 +59,7 @@ def reserve_inventory(item_id: str, quantity: int = 1, db: Session = Depends(get
         raise HTTPException(status_code=400, detail="Not enough stock available")
         
     item.reserved_quantity += quantity
-    
-    # Update status logic (e.g., Grab or Gone if stock is low)
-    if (item.stock_quantity - item.reserved_quantity) == 0:
-        item.status = "Out of Stock"
-    elif (item.stock_quantity - item.reserved_quantity) < 5:
-        item.status = "Grab or Gone"
+    _update_inventory_status(item)
         
     db.commit()
     db.refresh(item)
@@ -64,6 +75,7 @@ def reserve_inventory_batch(
         item.id: item
         for item in db.query(InventoryItem)
         .filter(InventoryItem.id.in_([entry.item_id for entry in payload.items]))
+        .with_for_update()
         .all()
     }
 
@@ -90,16 +102,38 @@ def reserve_inventory_batch(
     for entry in payload.items:
         inventory_item = items_by_id[entry.item_id]
         inventory_item.reserved_quantity += entry.quantity
-        remaining_stock = (
-            inventory_item.stock_quantity - inventory_item.reserved_quantity
-        )
-
-        if remaining_stock == 0:
-            inventory_item.status = "Out of Stock"
-        elif remaining_stock < 5:
-            inventory_item.status = "Grab or Gone"
-        else:
-            inventory_item.status = "In Stock"
+        _update_inventory_status(inventory_item)
 
     db.commit()
     return {"message": "Inventory reserved", "count": len(payload.items)}
+
+
+@router.post("/release-batch")
+def release_inventory_batch(
+    payload: ReserveInventoryBatch,
+    db: Session = Depends(get_db),
+):
+    items_by_id = {
+        item.id: item
+        for item in db.query(InventoryItem)
+        .filter(InventoryItem.id.in_([entry.item_id for entry in payload.items]))
+        .with_for_update()
+        .all()
+    }
+
+    for entry in payload.items:
+        inventory_item = items_by_id.get(entry.item_id)
+        if not inventory_item:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Inventory item {entry.item_id} not found",
+            )
+
+        inventory_item.reserved_quantity = max(
+            0,
+            inventory_item.reserved_quantity - entry.quantity,
+        )
+        _update_inventory_status(inventory_item)
+
+    db.commit()
+    return {"message": "Inventory released", "count": len(payload.items)}
