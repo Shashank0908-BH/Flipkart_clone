@@ -290,12 +290,6 @@ The smoke test validates:
 - checkout and order retrieval
 - optional OTP send/verify flow
 
-### Operational notes
-
-- Deploy as close to the evaluation day as possible so Railway Trial credit is spent on the actual demo window
-- UptimeRobot is optional for outage visibility only; do not use it as a keep-alive strategy
-- Keep the deployed state unchanged once the final smoke test passes
-
 ## Assumptions
 
 - The app silently bootstraps a default shopper session so the assignment works without forcing login
